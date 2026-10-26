@@ -120,12 +120,13 @@ class MainActivity : Activity() {
     }
     private fun showVideo(lesson: Lesson, file: File) {
         start(lesson.title)
-        val player = VideoView(this)
-        root.addView(player, LinearLayout.LayoutParams(-1, (resources.displayMetrics.widthPixels * 0.55).toInt().coerceAtLeast(280)))
-        player.setVideoPath(file.absolutePath)
-        player.setMediaController(MediaController(this).apply { setAnchorView(player) })
-        player.setOnPreparedListener { player.start() }
-        player.setOnErrorListener { _, _, _ -> Toast.makeText(this, "视频格式可能不受设备支持", Toast.LENGTH_LONG).show(); true }
+        note("点击下方按钮，横屏全屏观看视频")
+        button("▶ 全屏播放 · 横屏", blue) {
+            startActivity(Intent(this, VideoPlayerActivity::class.java).apply {
+                putExtra("path", file.absolutePath)
+                putExtra("title", lesson.title)
+            })
+        }
         completion(lesson)
     }
     private fun showPdf(lesson: Lesson, file: File) {
@@ -237,6 +238,19 @@ class MainActivity : Activity() {
         start("🗂 课程管理")
         if (lessons.isEmpty()) note("还没有导入任何资料")
         lessons.toList().forEach { lesson ->
+            button("✏ 修改名称 · ${lesson.subject} · ${lesson.title}", blue) {
+                val field = EditText(this).apply { setText(lesson.title); selectAll() }
+                AlertDialog.Builder(this).setTitle("修改课程名称").setView(field)
+                    .setNegativeButton("取消", null)
+                    .setPositiveButton("保存") { _, _ ->
+                        val title = field.text.toString().trim().take(60)
+                        if (title.isNotEmpty()) {
+                            val index = lessons.indexOfFirst { it.id == lesson.id }
+                            if (index >= 0) lessons[index] = lesson.copy(title = title)
+                            saveLessons(); manageLessons()
+                        } else Toast.makeText(this, "名称不能为空", Toast.LENGTH_SHORT).show()
+                    }.show()
+            }
             button("删除 · ${lesson.subject} · ${lesson.title}", Color.rgb(250, 226, 226)) {
                 AlertDialog.Builder(this).setTitle("确认删除？").setMessage("${lesson.title} 将从平板本地删除。")
                     .setNegativeButton("取消", null)
