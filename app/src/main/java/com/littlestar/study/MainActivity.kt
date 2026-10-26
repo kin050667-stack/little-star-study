@@ -51,7 +51,7 @@ class MainActivity : Activity() {
         activeRenderer?.close()
         activeRenderer = null
         root = column()
-        val scroll = ScrollView(this).apply { fillViewport = true; addView(root) }
+        val scroll = ScrollView(this).apply { isFillViewport = true; addView(root) }
         setContentView(scroll)
         heading(title)
         return root
